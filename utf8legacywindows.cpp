@@ -76,9 +76,9 @@ int main() {
     std::basic_fstream<char8_t> OutFile(OutputFilePath, std::ios::out);
     vu::printDefaultBOM(OutFile) << UTF8Literal << "\n" << UTF8Literal2 << "\n";
 
-    // std::print(OutFile, u8"{}", UTF8Literal); // does not compile with Visual
-    // Studio 17.9.4 std::print(OutFile, "{}", UTF8Literal); // does not compile
-    // with Visual Studio 17.9.4
+    // does not (yet) compile with Visual Studio 17.9.4
+    // std::print(OutFile, u8"{}", UTF8Literal);
+    // std::print(OutFile, "{}", UTF8Literal);
   }
 
   return 0;
