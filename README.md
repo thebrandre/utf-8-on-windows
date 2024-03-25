@@ -3,10 +3,13 @@
 * [utf8everywhere.cpp on Compiler Explorer](https://godbolt.org/z/d4PPYGxM3)
 * [escaping Unicode characters](https://godbolt.org/z/Pv7j56bzW)
 
-﻿# System Code Pages
+# System Code Pages
 
+There are two relevant code pages:
 * the OEM code page for use by legacy console applications,
 * the ANSI code page for use by legacy GUI applications
+
+There are several ways to get the active code pages:
 
 * `chcp`: *Displays or sets the active code page number.*
   * 437 IBM437	OEM United States
@@ -14,8 +17,12 @@
   * 1250 windows-1250	ANSI Central European; Central European (Windows)
   * 65001	utf-8	Unicode (UTF-8)
   * 1200	utf-16 	Unicode UTF-16, little endian byte order (BMP of ISO 10646)
-* `Get-WinSystemLocale`
-* `Get-ItemProperty HKLM:\SYSTEM\CurrentControlSet\Control\Nls\CodePage | Select-Object OEMCP, ACP`
+* PowerShell: `Get-WinSystemLocale`
+* PowerShell via registry: `Get-ItemProperty HKLM:\SYSTEM\CurrentControlSet\Control\Nls\CodePage | Select-Object OEMCP, ACP`
+* Windows C API: `GetACP()`, `GetOEMCP()`, `GetConsoleOutputCP()`
+
+As of Windows Version 1903, an application can easily set its own code page as described
+[here](https://learn.microsoft.com/en-us/windows/apps/design/globalizing/use-utf8-code-page).
 
 # Change the case sensitivity of files and directories
 
