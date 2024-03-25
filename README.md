@@ -1,3 +1,8 @@
+﻿# Code snippets
+
+* [utf8everywhere.cpp on Compiler Explorer](https://godbolt.org/z/d4PPYGxM3)
+* [escaping Unicode characters](https://godbolt.org/z/Pv7j56bzW)
+
 ﻿# System Code Pages
 
 * the OEM code page for use by legacy console applications,
@@ -32,6 +37,11 @@ returns the encoding `b'\xf0\x9f\x90\xb1'`
 hex(ord("🐱"))
 ```
 returns the code point as a hexadecimal value `'0x1f431'`
+
+Conversion of Unicode String to C++23 escaped characters:
+```Python
+print("".join([f"\\u{{{ord(x):x}}}" for x in "A äöüß μ ‰ ఠ 😆🐱"]))
+```
 
 # Compiler Options
 
