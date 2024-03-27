@@ -66,13 +66,14 @@ getCodePoint(const U8CompatibleChar auto *UTF8EncodedBytes) {
   };
 
   if (lc_numberOfBytes == 2) {
-    if (lc_firstByteValue < 2u)
+    if (lc_firstByteValue < 0b0000'0010)
       throw std::runtime_error("invalid start byte"); // uses only 7 bits
     return (lc_firstByteValue << 6) +
            getContinuationByteValue(UTF8EncodedBytes[1]);
   }
   if (lc_numberOfBytes == 3) {
-    if (lc_firstByteValue == 0 && getContinuationByteValue(UTF8EncodedBytes[1]) < 64u)
+    if (lc_firstByteValue == 0 &&
+        getContinuationByteValue(UTF8EncodedBytes[1]) < 0b0010'0000)
       throw std::runtime_error("invalid start byte"); // uses only 11 bits
     return (lc_firstByteValue << 12) +
            (getContinuationByteValue(UTF8EncodedBytes[1]) << 6) +
@@ -80,7 +81,7 @@ getCodePoint(const U8CompatibleChar auto *UTF8EncodedBytes) {
   }
     
   if (lc_numberOfBytes == 4) {
-    if (lc_firstByteValue == 0 && getContinuationByteValue(UTF8EncodedBytes[1]) < 16u)
+    if (lc_firstByteValue == 0 && getContinuationByteValue(UTF8EncodedBytes[1]) < 0b0001'0000)
       throw std::runtime_error("invalid start byte"); // uses only 16 bits
     
     return (lc_firstByteValue << 18) +
@@ -142,4 +143,10 @@ static_assert(vu::getCodePoint("☕") == 0x2615u);
 static_assert(vu::getCodePoint("\x41") == 0x41u);
 static_assert(vu::getCodePoint("A") == 0x41u);
 static_assert(vu::getCodePoint("🍛") == 0x1F35Bu);
+static_assert(vu::getCodePoint("\u007F") == 0x7Fu); // largest 1-byte value
+static_assert(vu::getCodePoint("\u0080") == 0x80u); // smallest 2-byte value
+static_assert(vu::getCodePoint("\u07FF") == 0x7FFu); // largest 2-byte value
+static_assert(vu::getCodePoint("\u0800") == 0x800); // smallest 2-byte value
+static_assert(vu::getCodePoint("\uFFFF") == 0xFFFFu); // largest 3-byte value
+static_assert(vu::getCodePoint("\U00010000") == 0x10000u); // smallest 4-byte value
 // static_assert(vu::getCodePoint("\xF8") == 0xF8);
