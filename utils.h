@@ -44,29 +44,52 @@ auto formatAsBinaryValues(std::ranges::input_range auto &&CharArray) {
 constexpr std::uint32_t
 getCodePoint(const U8CompatibleChar auto *UTF8EncodedBytes) {
   const auto lc_firstByte = std::bit_cast<std::uint8_t>(*UTF8EncodedBytes);
-  const auto getNextByteValue = [](char f_char) -> std::uint32_t {
+
+  const auto lc_numberOfLeadingOneBits = std::countl_one(lc_firstByte);
+  if (lc_numberOfLeadingOneBits == 0)
+    return lc_firstByte; // 1 byte ASCII character 
+
+  if (lc_numberOfLeadingOneBits == 1 || lc_numberOfLeadingOneBits > 4)
+    throw std::runtime_error("invalid start byte");
+
+  // decompose leading byte into length and value information
+  const auto lc_numberOfBytes = lc_numberOfLeadingOneBits;
+  const auto lc_firstByteValueMask = static_cast<std::uint8_t>(
+      static_cast<std::uint8_t>(1 << (8 - lc_numberOfLeadingOneBits)) - 1);
+  const auto lc_firstByteValue =
+      static_cast<std::uint32_t>(lc_firstByte & lc_firstByteValueMask);
+
+  const auto getContinuationByteValue = [](U8CompatibleChar auto f_char) -> std::uint32_t {
     if ((std::bit_cast<std::uint8_t>(f_char) & 0b0100'0000u) != 0u)
-      throw std::runtime_error("invalid next byte");
+      throw std::runtime_error("invalid continuation byte");
     return std::bit_cast<std::uint8_t>(f_char) & ~0b1000'0000u;
   };
 
-  const auto lc_numberOfBytes = std::countl_one(lc_firstByte);
-  if (lc_numberOfBytes == 0)
-    return lc_firstByte;
-  if (lc_numberOfBytes == 2)
-    return (static_cast<std::uint32_t>(lc_firstByte & ~0b1100'0000u) << 6) +
-           getNextByteValue(UTF8EncodedBytes[1]);
-  if (lc_numberOfBytes == 3)
-    return (static_cast<std::uint32_t>(lc_firstByte & ~0b1110'0000u) << 12) +
-           (getNextByteValue(UTF8EncodedBytes[1]) << 6) +
-           getNextByteValue(UTF8EncodedBytes[2]);
-  if (lc_numberOfBytes == 4)
-    return (static_cast<std::uint32_t>(lc_firstByte & ~0b1111'0000u) << 18) +
-           (getNextByteValue(UTF8EncodedBytes[1]) << 12) +
-           (getNextByteValue(UTF8EncodedBytes[2]) << 6) +
-           getNextByteValue(UTF8EncodedBytes[3]);
+  if (lc_numberOfBytes == 2) {
+    if (lc_firstByteValue < 2u)
+      throw std::runtime_error("invalid start byte"); // uses only 7 bits
+    return (lc_firstByteValue << 6) +
+           getContinuationByteValue(UTF8EncodedBytes[1]);
+  }
+  if (lc_numberOfBytes == 3) {
+    if (lc_firstByteValue == 0 && getContinuationByteValue(UTF8EncodedBytes[1]) < 64u)
+      throw std::runtime_error("invalid start byte"); // uses only 11 bits
+    return (lc_firstByteValue << 12) +
+           (getContinuationByteValue(UTF8EncodedBytes[1]) << 6) +
+           getContinuationByteValue(UTF8EncodedBytes[2]);
+  }
+    
+  if (lc_numberOfBytes == 4) {
+    if (lc_firstByteValue == 0 && getContinuationByteValue(UTF8EncodedBytes[1]) < 16u)
+      throw std::runtime_error("invalid start byte"); // uses only 16 bits
+    
+    return (lc_firstByteValue << 18) +
+           (getContinuationByteValue(UTF8EncodedBytes[1]) << 12) +
+           (getContinuationByteValue(UTF8EncodedBytes[2]) << 6) +
+           getContinuationByteValue(UTF8EncodedBytes[3]);
+  }
 
-  throw std::runtime_error("invalid start byte");
+  std::unreachable();
 }
 
 template <U8CompatibleChar T_Char, typename T_Traits>
