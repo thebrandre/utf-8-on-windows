@@ -66,7 +66,7 @@ int main() {
     // const auto OutputFilePath = std::filesystem::current_path() /
     // "file-with-unicode-characters\U0001F606.txt";
 
-    // both variants throw and error without std::locale("en_US.UTF-8")
+    // both variants throw an error without std::locale("en_US.UTF-8")
     const auto OutputFilePath = std::filesystem::current_path() /
                                 u8"file-with-unicode-characters\U0001F606.txt";
     // const auto OutputFilePath = std::filesystem::current_path() /
