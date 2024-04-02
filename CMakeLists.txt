@@ -38,7 +38,7 @@ target_sources (UTF8Everywhere
 endif()
 
 target_link_libraries(UTF8Everywhere PRIVATE DefaultCompilerSettings)
-set_property(TARGET UTF8Everywhere PROPERTY CXX_STANDARD 23)
+set_target_properties(UTF8Everywhere PROPERTIES CXX_STANDARD 23)
 
 if(WIN32)
 	add_executable (UTF8OnLegacyWindows)
@@ -47,6 +47,6 @@ if(WIN32)
 		"utf8legacywindows.cpp"
 		"utils.h"
 	)
-	set_property(TARGET UTF8OnLegacyWindows PROPERTY CXX_STANDARD 23)
 	target_link_libraries(UTF8OnLegacyWindows PRIVATE DefaultCompilerSettings)
+	set_target_properties(UTF8OnLegacyWindows PROPERTIES CXX_STANDARD 23)
 endif()
