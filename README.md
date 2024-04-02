@@ -1,7 +1,8 @@
 ﻿# Code snippets
 
 * [utf8everywhere.cpp on Compiler Explorer](https://godbolt.org/z/d4PPYGxM3)
-* [escaping Unicode characters](https://godbolt.org/z/Pv7j56bzW)
+* [escaping Unicode characters](https://godbolt.org/z/jc896Pan7)
+* [Modifier and Combining Marks](https://godbolt.org/z/YKvqoMefo)
 
 # System Code Pages
 
