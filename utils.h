@@ -43,54 +43,70 @@ auto formatAsBinaryValues(std::ranges::input_range auto &&CharArray) {
 /// @brief implementation of Python's `ord` builtin.
 constexpr std::uint32_t
 getCodePoint(const U8CompatibleChar auto *UTF8EncodedBytes) {
-  const auto lc_firstByte = std::bit_cast<std::uint8_t>(*UTF8EncodedBytes);
+  const auto FirstByte = std::bit_cast<std::uint8_t>(*UTF8EncodedBytes);
 
-  const auto lc_numberOfLeadingOneBits = std::countl_one(lc_firstByte);
-  if (lc_numberOfLeadingOneBits == 0)
-    return lc_firstByte; // 1 byte ASCII character 
+  const auto NumberOfLeadingOneBits = std::countl_one(FirstByte);
+  if (NumberOfLeadingOneBits == 0)
+    return FirstByte; // 1 byte ASCII character ∈[0x0,07F]
 
-  if (lc_numberOfLeadingOneBits == 1 || lc_numberOfLeadingOneBits > 4)
+  // Note: Unicode reserves code points up to \U0010FFFF (1,114,112 characters).
+  // So [0xF5, 0xF8] are invalid start bytes as well.
+  if (NumberOfLeadingOneBits == 1 ||
+      NumberOfLeadingOneBits > 4) // ∈[0x80,0xBF]∪[0xF8,0xFF]
     throw std::runtime_error("invalid start byte");
 
   // decompose leading byte into length and value information
-  const auto lc_numberOfBytes = lc_numberOfLeadingOneBits;
-  const auto lc_firstByteValueMask = static_cast<std::uint8_t>(
-      static_cast<std::uint8_t>(1 << (8 - lc_numberOfLeadingOneBits)) - 1);
-  const auto lc_firstByteValue =
-      static_cast<std::uint32_t>(lc_firstByte & lc_firstByteValueMask);
+  const auto NumberOfBytes = NumberOfLeadingOneBits;
+  const auto FirstByteValueMask = static_cast<std::uint8_t>(
+      static_cast<std::uint8_t>(1 << (8 - NumberOfLeadingOneBits)) - 1);
+  const auto FirstByteValue =
+      static_cast<std::uint32_t>(FirstByte & FirstByteValueMask);
 
-  const auto getContinuationByteValue = [](U8CompatibleChar auto f_char) -> std::uint32_t {
+  const auto getContinuationByteValue =
+      [](U8CompatibleChar auto f_char) -> std::uint32_t {
     if ((std::bit_cast<std::uint8_t>(f_char) & 0b0100'0000u) != 0u)
-      throw std::runtime_error("invalid continuation byte");
+      throw std::runtime_error("invalid continuation byte"); // ∉ [0x80,0xBF]
     return std::bit_cast<std::uint8_t>(f_char) & ~0b1000'0000u;
   };
 
-  if (lc_numberOfBytes == 2) {
-    if (lc_firstByteValue < 0b0000'0010)
-      throw std::runtime_error("invalid start byte"); // uses only 7 bits
-    return (lc_firstByteValue << 6) +
+  // start byte ∈[0xC0,0xDF] but valid is only [0xC2,0xDF]
+  if (NumberOfBytes == 2) {
+    if (FirstByteValue < 0b0000'0010)
+      throw std::runtime_error(
+          "invalid start byte"); // overlong sequence that uses only 7 bits
+    return (FirstByteValue << 6) +
            getContinuationByteValue(UTF8EncodedBytes[1]);
   }
-  if (lc_numberOfBytes == 3) {
-    if (lc_firstByteValue == 0 &&
+
+  // start byte ∈[0xE0,0xEF]
+  if (NumberOfBytes == 3) {
+    if (FirstByteValue == 0 &&
         getContinuationByteValue(UTF8EncodedBytes[1]) < 0b0010'0000)
-      throw std::runtime_error("invalid start byte"); // uses only 11 bits
-    return (lc_firstByteValue << 12) +
+      throw std::runtime_error(
+          "invalid start byte"); // overlong sequence that uses only 11 bits
+    return (FirstByteValue << 12) +
            (getContinuationByteValue(UTF8EncodedBytes[1]) << 6) +
            getContinuationByteValue(UTF8EncodedBytes[2]);
   }
-    
-  if (lc_numberOfBytes == 4) {
-    if (lc_firstByteValue == 0 && getContinuationByteValue(UTF8EncodedBytes[1]) < 0b0001'0000)
-      throw std::runtime_error("invalid start byte"); // uses only 16 bits
-    
-    return (lc_firstByteValue << 18) +
+
+  // start byte ∈[0xF0,0xF7]
+  if (NumberOfBytes == 4) {
+    if (FirstByteValue == 0 &&
+        getContinuationByteValue(UTF8EncodedBytes[1]) < 0b0001'0000)
+      throw std::runtime_error(
+          "invalid start byte"); // overlong sequence that uses only 16 bits
+
+    return (FirstByteValue << 18) +
            (getContinuationByteValue(UTF8EncodedBytes[1]) << 12) +
            (getContinuationByteValue(UTF8EncodedBytes[2]) << 6) +
            getContinuationByteValue(UTF8EncodedBytes[3]);
   }
 
+#ifdef __cpp_lib_unreachable
   std::unreachable();
+#else
+  __builtin_unreachable();
+#endif
 }
 
 template <U8CompatibleChar T_Char, typename T_Traits>
