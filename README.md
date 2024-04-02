@@ -68,6 +68,7 @@ We use an `.editorconfig` file to tell Visual Studio to save the file without th
 * [Use UTF-8 code pages in Windows apps](https://learn.microsoft.com/en-us/windows/apps/design/globalizing/use-utf8-code-page)
 * [UTF-8 Everywhere](https://utf8everywhere.org)
 * [Unicode: Going Down the Rabbit Hole - Peter Bindels - CppCon 2019](https://www.youtube.com/watch?v=SMSmKg1nApM&t=115s)
+* [Fast Conversion From UTF-8 with C++, DFAs, and SSE Intrinsics - Bob Steagall - CppCon 2018](https://youtu.be/5FQ87-Ecb-A)
 * [Wingdings and Webdings Symbols](https://unicode.org/L2/L2011/11052r-wingding.pdf)
 * [Change the case sensitivity of files and directories](https://learn.microsoft.com/en-us/windows/wsl/case-sensitivity#change-the-case-sensitivity-of-files-and-directories)
 * [String and character literals](https://learn.microsoft.com/en-us/cpp/cpp/string-and-character-literals-cpp?view=msvc-170)
@@ -81,6 +82,8 @@ We use an `.editorconfig` file to tell Visual Studio to save the file without th
 * [/source-charset](https://learn.microsoft.com/en-us/cpp/build/reference/source-charset-set-source-character-set?view=msvc-170)
 * [/execution-charset](https://learn.microsoft.com/en-us/cpp/build/reference/execution-charset-set-execution-character-set?view=msvc-170)
 * [Wikipedia: Mojibake](https://en.wikipedia.org/wiki/Mojibake)
+* [Combining character](https://en.wikipedia.org/wiki/Combining_character)
+* [The Unicode® Standard, Version 15.0 – Core Specification](https://www.unicode.org/versions/Unicode15.0.0/UnicodeStandard-15.0.pdf)
 
 # Characters
 
@@ -92,3 +95,9 @@ We use an `.editorconfig` file to tell Visual Studio to save the file without th
 * [💩 U+1F4A9 Pile of Poo](https://codepoints.net/U+1F4A9)
 * [☕ U+2615 Hot Beverage](https://codepoints.net/U+2615)
 * [🍛 U+1F35B Curry and Rice](https://codepoints.net/U+1F35B)
+* [U+0338 Combining Long Solidus Overlay](https://codepoints.net/U+0338)
+* [; U+037E Greek Question Mark](https://codepoints.net/U+037E)
+* [🖖 U+1F596 Raised Hand with Part Between Middle and Ring Fingers, "Vulcan Salute"](https://codepoints.net/U+1F596)
+* [U+1F3FB Emoji Modifier Fitzpatrick Type-1-2](https://codepoints.net/U+1F596)
+* [U+1F3FF Emoji Modifier Fitzpatrick Type-6](https://codepoints.net/U+1F3FF)
+* [👍 U+1F44D Thumbs Up Sign](https://codepoints.net/U+1F44D)
