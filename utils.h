@@ -3,6 +3,7 @@
 #include <bit>
 #include <cstdint>
 #include <format>
+#include <print>
 #include <ranges>
 
 namespace vu {
@@ -57,10 +58,6 @@ getCodePoint(const U8CompatibleChar auto *UTF8EncodedBytes) {
 
   // decompose leading byte into length and value information
   const auto NumberOfBytes = NumberOfLeadingOneBits;
-  const auto FirstByteValueMask = static_cast<std::uint8_t>(
-      static_cast<std::uint8_t>(1 << (8 - NumberOfLeadingOneBits)) - 1);
-  const auto FirstByteValue =
-      static_cast<std::uint32_t>(FirstByte & FirstByteValueMask);
 
   const auto getContinuationByteValue =
       [](U8CompatibleChar auto f_char) -> std::uint32_t {
@@ -71,35 +68,46 @@ getCodePoint(const U8CompatibleChar auto *UTF8EncodedBytes) {
 
   // start byte ∈[0xC0,0xDF] but valid is only [0xC2,0xDF]
   if (NumberOfBytes == 2) {
-    if (FirstByteValue < 0b0000'0010)
-      throw std::runtime_error(
-          "invalid start byte"); // overlong sequence that uses only 7 bits
-    return (FirstByteValue << 6) +
-           getContinuationByteValue(UTF8EncodedBytes[1]);
+    const auto FirstByteValue =
+        static_cast<std::uint32_t>(FirstByte) & 0b0001'1111u;
+    const std::uint32_t CodePoint =
+        (FirstByteValue << 6) + getContinuationByteValue(UTF8EncodedBytes[1]);
+    static_assert(0x80u == 1u << 7);
+    if (CodePoint < 0x80) // overlong sequence that uses only 7 bits
+      throw std::runtime_error("invalid start byte");
+    return CodePoint;
   }
 
   // start byte ∈[0xE0,0xEF]
   if (NumberOfBytes == 3) {
-    if (FirstByteValue == 0 &&
-        getContinuationByteValue(UTF8EncodedBytes[1]) < 0b0010'0000)
-      throw std::runtime_error(
-          "invalid start byte"); // overlong sequence that uses only 11 bits
-    return (FirstByteValue << 12) +
-           (getContinuationByteValue(UTF8EncodedBytes[1]) << 6) +
-           getContinuationByteValue(UTF8EncodedBytes[2]);
+    const auto FirstByteValue =
+        static_cast<std::uint32_t>(FirstByte) & 0b0000'1111u;
+    const std::uint32_t CodePoint =
+        (FirstByteValue << 12) +
+        (getContinuationByteValue(UTF8EncodedBytes[1]) << 6) +
+        getContinuationByteValue(UTF8EncodedBytes[2]);
+    static_assert(0x800u == 1u << 11);
+    if (CodePoint < 0x800u) // overlong sequence that uses only 11 bits
+      throw std::runtime_error("invalid start byte");
+    static_assert(0xDFFFu - 0xD800u + 1u == 2048u);
+    if (CodePoint >= 0xD800u && CodePoint <= 0xDFFFu)
+      throw std::runtime_error("code point within the surrogate range");
+    return CodePoint;
   }
 
   // start byte ∈[0xF0,0xF7]
   if (NumberOfBytes == 4) {
-    if (FirstByteValue == 0 &&
-        getContinuationByteValue(UTF8EncodedBytes[1]) < 0b0001'0000)
-      throw std::runtime_error(
-          "invalid start byte"); // overlong sequence that uses only 16 bits
-
-    return (FirstByteValue << 18) +
-           (getContinuationByteValue(UTF8EncodedBytes[1]) << 12) +
-           (getContinuationByteValue(UTF8EncodedBytes[2]) << 6) +
-           getContinuationByteValue(UTF8EncodedBytes[3]);
+    const auto FirstByteValue =
+        static_cast<std::uint32_t>(FirstByte) & 0b0000'0111u;
+    const std::uint32_t CodePoint =
+        (FirstByteValue << 18) +
+        (getContinuationByteValue(UTF8EncodedBytes[1]) << 12) +
+        (getContinuationByteValue(UTF8EncodedBytes[2]) << 6) +
+        getContinuationByteValue(UTF8EncodedBytes[3]);
+    static_assert(0x10000u == 1u << 16);
+    if (CodePoint < 0x10000u) // overlong sequence that uses only 16 bits
+      throw std::runtime_error("invalid start byte");
+    return CodePoint;
   }
 
 #ifdef __cpp_lib_unreachable
@@ -142,6 +150,16 @@ bool swallowBOM(std::basic_istream<T_Char, T_Traits> &InputStream) {
   return true;
 }
 
+template <U8CompatibleChar T_Char>
+void describeCodePoint(std::basic_string_view<T_Char> EncodedCodePoint) {
+  std::print("Code point {:#x} is rendered as {} and encoded with {} "
+             "character(s) as {} or {}.\n",
+             vu::getCodePoint(EncodedCodePoint.data()), EncodedCodePoint,
+             EncodedCodePoint.size(),
+             vu::formatAsHexadecimalValues(EncodedCodePoint),
+             vu::formatAsBinaryValues(EncodedCodePoint));
+}
+
 } // namespace vu
 
 static_assert(vu::U8CompatibleChar<char>);
@@ -159,10 +177,15 @@ static_assert(vu::getCodePoint("☕") == 0x2615u);
 static_assert(vu::getCodePoint("\x41") == 0x41u);
 static_assert(vu::getCodePoint("A") == 0x41u);
 static_assert(vu::getCodePoint("🍛") == 0x1F35Bu);
-static_assert(vu::getCodePoint("\u007F") == 0x7Fu); // largest 1-byte value
-static_assert(vu::getCodePoint("\u0080") == 0x80u); // smallest 2-byte value
-static_assert(vu::getCodePoint("\u07FF") == 0x7FFu); // largest 2-byte value
-static_assert(vu::getCodePoint("\u0800") == 0x800); // smallest 2-byte value
+static_assert(vu::getCodePoint("\u007F") == 0x7Fu);   // largest 1-byte value
+static_assert(vu::getCodePoint("\u0080") == 0x80u);   // smallest 2-byte value
+static_assert(vu::getCodePoint("\u07FF") == 0x7FFu);  // largest 2-byte value
+static_assert(vu::getCodePoint("\u0800") == 0x800);   // smallest 2-byte value
 static_assert(vu::getCodePoint("\uFFFF") == 0xFFFFu); // largest 3-byte value
-static_assert(vu::getCodePoint("\U00010000") == 0x10000u); // smallest 4-byte value
+static_assert(vu::getCodePoint("\U00010000") ==
+              0x10000u); // smallest 4-byte value
 // static_assert(vu::getCodePoint("\xF8") == 0xF8);
+// static_assert(vu::getCodePoint("\uD800") == 0xD800);
+// static_assert(vu::getCodePoint("\uDFFF") == 0xDFFF);
+// static_assert(vu::getCodePoint("\xED\xA0\x80") == 0xD800);
+// static_assert(vu::getCodePoint("\xED\xBF\xBF") == 0xDFFF);

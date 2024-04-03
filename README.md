@@ -1,9 +1,10 @@
 ﻿# Code snippets
 
-* [utf8everywhere.cpp on Linux](https://godbolt.org/z/3bf6scszb)
+* [utf8everywhere.cpp on Linux](https://godbolt.org/z/9vKh3aTK5)
 * [escaping Unicode characters](https://godbolt.org/z/jc896Pan7)
 * [Homoglpyhs](https://godbolt.org/z/f9eaf73E9)
 * [Modifier and Combining Marks](https://godbolt.org/z/c41njad8x)
+* [Questions?](https://godbolt.org/z/Gv1hsfeo6)
 
 # System Code Pages
 
@@ -102,3 +103,5 @@ We use an `.editorconfig` file to tell Visual Studio to save the file without th
 * [U+1F3FB Emoji Modifier Fitzpatrick Type-1-2](https://codepoints.net/U+1F596)
 * [U+1F3FF Emoji Modifier Fitzpatrick Type-6](https://codepoints.net/U+1F3FF)
 * [👍 U+1F44D Thumbs Up Sign](https://codepoints.net/U+1F44D)
+* [🧙 U+1F9D9 Mage](https://codepoints.net/U+1F9D9)
+* [🙋 U+1F64B Happy Person Raising One Hand](https://codepoints.net/U+1F64B)
