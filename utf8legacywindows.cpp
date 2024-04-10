@@ -29,18 +29,18 @@ int main() {
   std::print("Direct: {}\n", reinterpret_cast<const char *>(UTF8Literal2));
   std::print("Explicit UTF-8 encoded values: {}\n", UTF8Literal3);
   assert(std::u8string_view(UTF8Literal) == std::u8string_view(UTF8Literal2));
-
+  assert(std::u8string_view(UTF8Literal) ==
+         std::u8string_view(reinterpret_cast<const char8_t *>(UTF8Literal3)));
   {
-    auto MessageLength =
-        static_cast<DWORD>(std::u8string_view{UTF8Literal}.size());
+    const auto Message = std::string("WriteConsoleA: ") + UTF8Literal3 + "\n";
     DWORD CharactersWritten = 0;
-    WriteConsoleA(GetStdHandle(STD_OUTPUT_HANDLE), UTF8Literal, MessageLength,
+    WriteConsoleA(GetStdHandle(STD_OUTPUT_HANDLE), Message.c_str(), Message.size(),
                   &CharactersWritten, nullptr);
-    assert(MessageLength == CharactersWritten);
+    assert(Message.size() == CharactersWritten);
   }
 
   {
-    LPCWSTR Message = L"A äöüß μ ‰ ఠ 😆🐱\n";
+    LPCWSTR Message = L"WriteConsoleW: A äöüß μ ‰ ఠ 😆🐱\n";
     auto MessageLength = static_cast<DWORD>(std::wstring_view{Message}.size());
     DWORD CharactersWritten = 0;
     WriteConsoleW(GetStdHandle(STD_OUTPUT_HANDLE), Message, MessageLength,
